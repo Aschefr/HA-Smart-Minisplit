@@ -24,7 +24,8 @@ from .const import (
     CONF_CONSIGNE_CONFORT_CLIMATISATION,
 )
 
-class SmartMinisplitConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+# class SmartMinisplitConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SmartMinisplitConfigFlow(config_entries.ConfigFlow):
     """Gestion du flux de configuration"""
 
     VERSION = 2
