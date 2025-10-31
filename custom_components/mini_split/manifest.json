@@ -1,0 +1,10 @@
+{
+    "name": "Mini-Split Manager",
+    "domain": "mini_split",
+    "version": "1.0.0",
+    "documentation": "https://github.com/Aschefr/HA-Smart-Minisplit",
+    "issue_tracker": "https://github.com/Aschefr/HA-Smart-Minisplit/issues",
+    "dependencies": [],
+    "codeowners": ["@Aschefr"],
+    "iot_class": "local_polling"
+}
