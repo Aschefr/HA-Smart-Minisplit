@@ -54,7 +54,8 @@ class SmartMinisplitStatusSensor(SensorEntity):
     async def async_update(self):
         """Mise à jour du statut"""
         # Récupérer l'entité climate pour obtenir les informations
-        climate_entity = self.hass.states.get(f"climate.{DOMAIN}_controller")
+        climate_entity_id = f"climate.{DOMAIN}_{self._entry_id}_climate"
+        climate_entity = self.hass.states.get(climate_entity_id)
         
         if not climate_entity:
             self._state = "Contrôleur non disponible"
