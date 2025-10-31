@@ -1,9 +1,9 @@
-"""Constantes pour l'intégration Mini-Split"""
+"""Constantes pour l'intégration HA Smart Minisplit"""
 
-DOMAIN = "mini_split"
+DOMAIN = "smart_minisplit"
 PLATFORMS = ["climate", "sensor", "switch"]
-DEFAULT_NAME = "Mini-Split"
-DEFAULT_HYSTERESIS = 0.5
+DEFAULT_NAME = "Smart Minisplit"
+DEFAULT_HYSTERESIS = 2
 DEFAULT_OFFSET = 1
 DEFAULT_CONSIGNES = {
     "absence": {"chauffage": 18, "climatisation": 26},
