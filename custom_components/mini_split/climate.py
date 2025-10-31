@@ -1,4 +1,4 @@
-"""Capteur de climatisation pour Mini-Split"""
+"""Capteur de climatisation pour HA Smart Minisplit"""
 
 import logging
 from homeassistant.components.climate import ClimateEntity
@@ -14,20 +14,20 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Configuration depuis la configuration YAML"""
-    async_add_entities([MiniSplitClimate(hass, config)], True)
+    async_add_entities([SmartMinisplitClimate(hass, config)], True)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Configuration depuis une entrée de configuration"""
     config = config_entry.data
-    async_add_entities([MiniSplitClimate(hass, config)], True)
+    async_add_entities([SmartMinisplitClimate(hass, config)], True)
 
-class MiniSplitClimate(ClimateEntity):
+class SmartMinisplitClimate(ClimateEntity):
     """Représentation d'un mini-split avec logique avancée"""
 
     def __init__(self, hass, config):
         self.hass = hass
         self._config = config
-        self._name = "Mini-Split"
+        self._name = "Smart Minisplit"
         self._current_temperature = None
         self._target_temperature = None
         self._hvac_mode = HVAC_MODE_OFF
