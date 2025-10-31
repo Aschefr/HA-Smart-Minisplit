@@ -20,10 +20,16 @@ class MiniSplitConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required("mini_split_climate"): str,
                     vol.Required("temperature_exterieure"): str,
                     vol.Required("temperature_piece"): str,
-                    vol.Required("presence_piece"): str,
-                    vol.Required("presence_maison"): str,
+                    vol.Optional("presence_piece"): str,
+                    vol.Optional("presence_maison"): str,
                     vol.Optional("hysteresis", default=2): float,
-                    vol.Optional("offset", default=1): float,
+                    vol.Optional("repli", default=1): float,
+                    vol.Optional("consigne_absence_chauffage", default=18): float,
+                    vol.Optional("consigne_eco_chauffage", default=20): float,
+                    vol.Optional("consigne_confort_chauffage", default=22): float,
+                    vol.Optional("consigne_absence_climatisation", default=26): float,
+                    vol.Optional("consigne_eco_climatisation", default=25): float,
+                    vol.Optional("consigne_confort_climatisation", default=24): float,
                 })
             )
 
