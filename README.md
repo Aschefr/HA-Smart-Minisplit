@@ -1,3 +1,5 @@
+# WORK IN PROGRESS DONT USE AS IS / NE PAS UTILISER !!!
+
 # Mini-Split Manager pour Home Assistant
 
 Gestion complète de votre mini-split avec hystérésis, modes de fonctionnement et détection de présence.
