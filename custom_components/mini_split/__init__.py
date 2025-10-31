@@ -1,4 +1,4 @@
-"""Intégration Mini-Split pour Home Assistant"""
+"""Intégration HA Smart Minisplit pour Home Assistant"""
 
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
