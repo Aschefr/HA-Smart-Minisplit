@@ -1,6 +1,6 @@
 {
-    "name": "Mini-Split Manager",
-    "domain": "mini_split",
+    "name": "HA Smart Minisplit",
+    "domain": "smart_minisplit",
     "version": "1.0.0",
     "documentation": "https://github.com/Aschefr/HA-Smart-Minisplit",
     "issue_tracker": "https://github.com/Aschefr/HA-Smart-Minisplit/issues",
