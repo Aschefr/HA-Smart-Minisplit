@@ -1,0 +1,1 @@
+"""HA Smart Minisplit Integration."""
