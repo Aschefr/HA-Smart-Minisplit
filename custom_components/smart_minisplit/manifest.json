@@ -1,7 +1,7 @@
 {
     "name": "HA Smart Minisplit",
     "domain": "smart_minisplit",
-    "version": "2.0.2",
+    "version": "2.0.3",
     "documentation": "https://github.com/Aschefr/HA-Smart-Minisplit",
     "issue_tracker": "https://github.com/Aschefr/HA-Smart-Minisplit/issues",
     "dependencies": [],
