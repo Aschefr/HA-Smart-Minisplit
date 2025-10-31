@@ -1,11 +1,11 @@
-"""Flux de configuration pour l'intégration Mini-Split"""
+"""Flux de configuration pour l'intégration HA Smart Minisplit"""
 
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from .const import DOMAIN, DEFAULT_CONSIGNES
 
-class MiniSplitConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SmartMinisplitConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Gestion du flux de configuration"""
 
     VERSION = 1
@@ -34,7 +34,7 @@ class MiniSplitConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(
-            title="Mini-Split Manager",
+            title="HA Smart Minisplit",
             data=user_input
         )
 
@@ -42,9 +42,9 @@ class MiniSplitConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry):
         """Renvoie le flux d'options"""
-        return MiniSplitOptionsFlow(config_entry)
+        return SmartMinisplitOptionsFlow(config_entry)
 
-class MiniSplitOptionsFlow(config_entries.OptionsFlow):
+class SmartMinisplitOptionsFlow(config_entries.OptionsFlow):
     """Gestion des options"""
 
     def __init__(self, config_entry):
