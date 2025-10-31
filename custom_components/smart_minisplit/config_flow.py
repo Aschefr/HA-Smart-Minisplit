@@ -116,20 +116,56 @@ class SmartMinisplitOptionsFlow(config_entries.OptionsFlow):
 
     def __init__(self, config_entry):
         self.config_entry = config_entry
-
+        
     async def async_step_init(self, user_input=None):
-        """Étape d'initialisation des options"""
+        """Étape d'initialisation des options (Consignes et Réglages)"""
+        
+        # Utiliser les données actuelles de l'entrée de configuration
+        data = self.config_entry.data
+        
         if user_input is None:
             return self.async_show_form(
                 step_id="init",
                 data_schema=vol.Schema({
+                    # Réglages généraux
                     vol.Optional(
                         CONF_HYSTERESIS,
-                        default=self.config_entry.data.get(CONF_HYSTERESIS, DEFAULT_HYSTERESIS)
+                        default=data.get(CONF_HYSTERESIS, DEFAULT_HYSTERESIS)
                     ): vol.All(vol.Coerce(float), vol.Range(min=0.5, max=5.0)),
                     vol.Optional(
                         CONF_OFFSET,
-                        default=self.config_entry.data.get(CONF_OFFSET, DEFAULT_OFFSET)
+                        default=data.get(CONF_OFFSET, DEFAULT_OFFSET)
                     ): vol.All(vol.Coerce(float), vol.Range(min=0.5, max=3.0)),
+
+                    # Consignes CHAUFFAGE
                     vol.Optional(
-                        CONF_CONSIGNE_ABSENCE_
+                        CONF_CONSIGNE_ABSENCE_CHAUFFAGE,
+                        default=data.get(CONF_CONSIGNE_ABSENCE_CHAUFFAGE, DEFAULT_CONSIGNES["absence"]["chauffage"])
+                    ): vol.All(vol.Coerce(float), vol.Range(min=15.0, max=25.0)),
+                    vol.Optional(
+                        CONF_CONSIGNE_ECO_CHAUFFAGE,
+                        default=data.get(CONF_CONSIGNE_ECO_CHAUFFAGE, DEFAULT_CONSIGNES["eco"]["chauffage"])
+                    ): vol.All(vol.Coerce(float), vol.Range(min=15.0, max=25.0)),
+                    vol.Optional(
+                        CONF_CONSIGNE_CONFORT_CHAUFFAGE,
+                        default=data.get(CONF_CONSIGNE_CONFORT_CHAUFFAGE, DEFAULT_CONSIGNES["confort"]["chauffage"])
+                    ): vol.All(vol.Coerce(float), vol.Range(min=15.0, max=25.0)),
+
+                    # Consignes CLIMATISATION
+                    vol.Optional(
+                        CONF_CONSIGNE_ABSENCE_CLIMATISATION,
+                        default=data.get(CONF_CONSIGNE_ABSENCE_CLIMATISATION, DEFAULT_CONSIGNES["absence"]["climatisation"])
+                    ): vol.All(vol.Coerce(float), vol.Range(min=20.0, max=30.0)),
+                    vol.Optional(
+                        CONF_CONSIGNE_ECO_CLIMATISATION,
+                        default=data.get(CONF_CONSIGNE_ECO_CLIMATISATION, DEFAULT_CONSIGNES["eco"]["climatisation"])
+                    ): vol.All(vol.Coerce(float), vol.Range(min=20.0, max=30.0)),
+                    vol.Optional(
+                        CONF_CONSIGNE_CONFORT_CLIMATISATION,
+                        default=data.get(CONF_CONSIGNE_CONFORT_CLIMATISATION, DEFAULT_CONSIGNES["confort"]["climatisation"])
+                    ): vol.All(vol.Coerce(float), vol.Range(min=20.0, max=30.0)),
+                }) # Fermeture de vol.Schema
+            ) # Fermeture de self.async_show_form
+        
+        # Enregistrer les options
+        return self.async_create_entry(title="", data=user_input)
