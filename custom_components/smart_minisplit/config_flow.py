@@ -24,12 +24,13 @@ from .const import (
     CONF_CONSIGNE_CONFORT_CLIMATISATION,
 )
 
-# class SmartMinisplitConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+# Correction : Retrait de ", domain=DOMAIN" et de la faute de frappe
 class SmartMinisplitConfigFlow(config_entries.ConfigFlow):
     """Gestion du flux de configuration"""
 
     VERSION = 2
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLLING
+    # CORRECTION : Remplacer CONN_CLASS_LOCAL_POLLING par CONN_CLASS_LOCAL_POLL
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def async_step_user(self, user_input=None):
         """Étape de configuration initiale"""
@@ -72,27 +73,27 @@ class SmartMinisplitConfigFlow(config_entries.ConfigFlow):
                 step_id="consignes",
                 data_schema=vol.Schema({
                     vol.Optional(CONF_CONSIGNE_ABSENCE_CHAUFFAGE, 
-                                default=DEFAULT_CONSIGNES["absence"]["chauffage"]): vol.All(
+                                 default=DEFAULT_CONSIGNES["absence"]["chauffage"]): vol.All(
                         vol.Coerce(float), vol.Range(min=15.0, max=25.0)
                     ),
                     vol.Optional(CONF_CONSIGNE_ECO_CHAUFFAGE,
-                                default=DEFAULT_CONSIGNES["eco"]["chauffage"]): vol.All(
+                                 default=DEFAULT_CONSIGNES["eco"]["chauffage"]): vol.All(
                         vol.Coerce(float), vol.Range(min=15.0, max=25.0)
                     ),
                     vol.Optional(CONF_CONSIGNE_CONFORT_CHAUFFAGE,
-                                default=DEFAULT_CONSIGNES["confort"]["chauffage"]): vol.All(
+                                 default=DEFAULT_CONSIGNES["confort"]["chauffage"]): vol.All(
                         vol.Coerce(float), vol.Range(min=15.0, max=25.0)
                     ),
                     vol.Optional(CONF_CONSIGNE_ABSENCE_CLIMATISATION,
-                                default=DEFAULT_CONSIGNES["absence"]["climatisation"]): vol.All(
+                                 default=DEFAULT_CONSIGNES["absence"]["climatisation"]): vol.All(
                         vol.Coerce(float), vol.Range(min=20.0, max=30.0)
                     ),
                     vol.Optional(CONF_CONSIGNE_ECO_CLIMATISATION,
-                                default=DEFAULT_CONSIGNES["eco"]["climatisation"]): vol.All(
+                                 default=DEFAULT_CONSIGNES["eco"]["climatisation"]): vol.All(
                         vol.Coerce(float), vol.Range(min=20.0, max=30.0)
                     ),
                     vol.Optional(CONF_CONSIGNE_CONFORT_CLIMATISATION,
-                                default=DEFAULT_CONSIGNES["confort"]["climatisation"]): vol.All(
+                                 default=DEFAULT_CONSIGNES["confort"]["climatisation"]): vol.All(
                         vol.Coerce(float), vol.Range(min=20.0, max=30.0)
                     ),
                 })
@@ -165,8 +166,8 @@ class SmartMinisplitOptionsFlow(config_entries.OptionsFlow):
                         CONF_CONSIGNE_CONFORT_CLIMATISATION,
                         default=data.get(CONF_CONSIGNE_CONFORT_CLIMATISATION, DEFAULT_CONSIGNES["confort"]["climatisation"])
                     ): vol.All(vol.Coerce(float), vol.Range(min=20.0, max=30.0)),
-                }) # Fermeture de vol.Schema
-            ) # Fermeture de self.async_show_form
+                })
+            )
         
         # Enregistrer les options
         return self.async_create_entry(title="", data=user_input)
