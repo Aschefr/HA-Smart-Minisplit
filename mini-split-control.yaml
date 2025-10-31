@@ -1,0 +1,278 @@
+# mini-split-control.yaml
+blueprint:
+  name: Gestion Mini-Split avec Hystérésis
+  description: Automatisation complète pour le pilotage d'un mini-split avec gestion des modes, hystérésis et détection de présence
+  domain: automation
+  source_url: https://github.com/Aschefr/HA-Smart-Minisplit
+  input:
+    mini_split_climate:
+      name: Entité Climate du Mini-Split
+      description: Entité climate du mini-split à contrôler
+      selector:
+        entity:
+          domain: climate
+    temperature_exterieure:
+      name: Capteur Température Extérieure
+      description: Capteur de température extérieure
+      selector:
+        entity:
+          domain: sensor
+    temperature_piece:
+      name: Capteur Température Pièce
+      description: Capteur de température de la pièce
+      selector:
+        entity:
+          domain: sensor
+    presence_piece:
+      name: Capteur Présence Pièce
+      description: Capteur de détection de présence dans la pièce
+      selector:
+        entity:
+          domain: switch
+    presence_maison:
+      name: Capteur Présence Maison
+      description: Capteur de détection de présence dans la maison
+      selector:
+        entity:
+          domain: switch
+    mode_manuel:
+      name: Interrupteur Mode Manuel
+      description: Interrupteur pour activer le mode manuel
+      selector:
+        entity:
+          domain: switch
+    consigne_absence:
+      name: Consigne Mode Absence
+      description: Température de consigne en mode absence
+      default: 18
+      selector:
+        number:
+          min: 10
+          max: 30
+          step: 0.5
+          unit_of_measurement: "°C"
+    consigne_eco:
+      name: Consigne Mode Eco
+      description: Température de consigne en mode éco
+      default: 20
+      selector:
+        number:
+          min: 10
+          max: 30
+          step: 0.5
+          unit_of_measurement: "°C"
+    consigne_confort:
+      name: Consigne Mode Confort
+      description: Température de consigne en mode confort
+      default: 22
+      selector:
+        number:
+          min: 10
+          max: 30
+          step: 0.5
+          unit_of_measurement: "°C"
+    hysteresis:
+      name: Hystérésis
+      description: Valeur d'hystérésis en °C
+      default: 2
+      selector:
+        number:
+          min: 0.5
+          max: 5
+          step: 0.1
+          unit_of_measurement: "°C"
+    offset:
+      name: Offset
+      description: Valeur d'offset en °C
+      default: 1
+      selector:
+        number:
+          min: 0.1
+          max: 3
+          step: 0.1
+          unit_of_measurement: "°C"
+
+trigger:
+  - platform: homeassistant
+    event: start
+  - platform: state
+    entity_id: "[[ temperature_exterieure ]]"
+    attribute: temperature
+  - platform: state
+    entity_id: "[[ presence_piece ]]"
+  - platform: state
+    entity_id: "[[ presence_maison ]]"
+  - platform: state
+    entity_id: "[[ mode_manuel ]]"
+
+condition:
+  - condition: state
+    entity_id: "[[ mode_manuel ]]"
+    state: "off"
+
+action:
+  - alias: "Initialisation variables"
+    service: input_number.set_value
+    target:
+      entity_id: input_number.temp_exterieure
+    data:
+      value: "{{ states('[[ temperature_exterieure ]]') | float }}"
+  - alias: "Mise à jour température pièce"
+    service: input_number.set_value
+    target:
+      entity_id: input_number.temp_piece
+    data:
+      value: "{{ states('[[ temperature_piece ]]') | float }}"
+
+  - alias: "Vérification mode manuel"
+    condition: state
+    entity_id: "[[ mode_manuel ]]"
+    state: "on"
+    continue_on_match: false
+    sequence:
+      - alias: "Mode manuel activé"
+        service: input_text.set_value
+        target:
+          entity_id: input_text.etat_mini_split
+        data:
+          value: "Mode manuel activé - Pilotage automatique suspendu"
+      - alias: "Fin de l'automatisation en mode manuel"
+        stop: "Fin de l'automatisation en mode manuel"
+
+  - alias: "Vérification présence maison"
+    condition: state
+    entity_id: "[[ presence_maison ]]"
+    state: "off"
+    sequence:
+      - alias: "Maison vide - Arrêt mini-split"
+        service: climate.set_hvac_mode
+        target:
+          entity_id: "[[ mini_split_climate ]]"
+        data:
+          hvac_mode: "off"
+      - alias: "Mise à jour état"
+        service: input_text.set_value
+        target:
+          entity_id: input_text.etat_mini_split
+        data:
+          value: "Maison vide - Mini-split arrêté"
+      - alias: "Fin de l'automatisation"
+        stop: "Maison vide"
+
+  - alias: "Maison présente - Vérification présence pièce"
+    condition: state
+    entity_id: "[[ presence_piece ]]"
+    state: "off"
+    sequence:
+      - alias: "Mode absence activé"
+        service: climate.set_hvac_mode
+        target:
+          entity_id: "[[ mini_split_climate ]]"
+        data:
+          hvac_mode: "heat"
+      - alias: "Application consigne absence"
+        service: climate.set_temperature
+        target:
+          entity_id: "[[ mini_split_climate ]]"
+        data:
+          temperature: "[[ consigne_absence ]]"
+      - alias: "Mise à jour état"
+        service: input_text.set_value
+        target:
+          entity_id: input_text.etat_mini_split
+        data:
+          value: "Mode absence activé"
+
+  - alias: "Présence pièce - Vérification mode climatisation"
+    condition: state
+    entity_id: "[[ presence_piece ]]"
+    state: "on"
+    sequence:
+      - alias: "Mode confort"
+        condition: state
+        entity_id: input_select.mode_climate
+        state: "confort"
+        sequence:
+          - alias: "Application consigne confort"
+            service: climate.set_temperature
+            target:
+              entity_id: "[[ mini_split_climate ]]"
+            data:
+              temperature: "[[ consigne_confort ]]"
+          - alias: "Mise à jour état"
+            service: input_text.set_value
+            target:
+              entity_id: input_text.etat_mini_split
+            data:
+              value: "Mode confort activé"
+      - alias: "Mode eco"
+        condition: state
+        entity_id: input_select.mode_climate
+        state: "eco"
+        sequence:
+          - alias: "Application consigne eco"
+            service: climate.set_temperature
+            target:
+              entity_id: "[[ mini_split_climate ]]"
+            data:
+              temperature: "[[ consigne_eco ]]"
+          - alias: "Mise à jour état"
+            service: input_text.set_value
+            target:
+              entity_id: input_text.etat_mini_split
+            data:
+              value: "Mode eco activé"
+      - alias: "Mode absence"
+        condition: state
+        entity_id: input_select.mode_climate
+        state: "absence"
+        sequence:
+          - alias: "Application consigne absence"
+            service: climate.set_temperature
+            target:
+              entity_id: "[[ mini_split_climate ]]"
+            data:
+              temperature: "[[ consigne_absence ]]"
+          - alias: "Mise à jour état"
+            service: input_text.set_value
+            target:
+              entity_id: input_text.etat_mini_split
+            data:
+              value: "Mode absence activé"
+
+input_number:
+  temp_exterieure:
+    name: Température extérieure
+    initial: 15
+    min: -20
+    max: 40
+    step: 0.1
+    unit_of_measurement: "°C"
+  temp_piece:
+    name: Température pièce
+    initial: 20
+    min: 0
+    max: 40
+    step: 0.1
+    unit_of_measurement: "°C"
+  hysteresis_value:
+    name: Hystérésis calculée
+    initial: 2
+    min: 0.5
+    max: 5
+    step: 0.1
+    unit_of_measurement: "°C"
+
+input_select:
+  mode_climate:
+    name: Mode de climatisation
+    options:
+      - "absence"
+      - "eco"
+      - "confort"
+    initial: "confort"
+
+input_text:
+  etat_mini_split:
+    name: Etat mini-split
+    initial: "Système démarré"
