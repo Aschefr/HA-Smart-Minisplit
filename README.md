@@ -1,4 +1,4 @@
-# Mini-Split Manager pour Home Assistant
+# HA Smart Minisplit pour Home Assistant
 
 Gestion complète et intelligente de votre mini-split avec hystérésis, modes de fonctionnement avancés et détection de présence.
 
@@ -52,7 +52,7 @@ Gestion complète et intelligente de votre mini-split avec hystérésis, modes d
 
 1. Installez HACS
 2. Ajoutez ce dépôt comme dépôt personnalisé
-3. Installez "Mini-Split Manager"
+3. Installez "HA Smart Minisplit"
 4. Redémarrez Home Assistant
 5. Configurez dans Configuration → Intégrations
 
