@@ -49,23 +49,41 @@ class MiniSplitSensor(SensorEntity):
 
     async def async_update(self):
         """Mise à jour de l'état"""
-        # Récupérer les données des capteurs
+        # Récupérer les données des capteurs avec gestion d'erreur
         temp_ext = self.hass.states.get(self._config.get("temperature_exterieure"))
         temp_piece = self.hass.states.get(self._config.get("temperature_piece"))
         
+        # Gestion des capteurs manquants
         if temp_ext:
-            self._attributes["temperature_exterieure"] = float(temp_ext.state)
-            
+            try:
+                self._attributes["temperature_exterieure"] = float(temp_ext.state)
+            except (ValueError, TypeError):
+                self._attributes["temperature_exterieure"] = 15.0
+                
         if temp_piece:
-            self._attributes["temperature_piece"] = float(temp_piece.state)
+            try:
+                self._attributes["temperature_piece"] = float(temp_piece.state)
+            except (ValueError, TypeError):
+                self._attributes["temperature_piece"] = 20.0
             
         # Déterminer l'état actuel
         presence_piece = self.hass.states.get(self._config.get("presence_piece"))
         presence_maison = self.hass.states.get(self._config.get("presence_maison"))
         
-        if presence_maison and presence_maison.state == "off":
+        # Gestion des capteurs manquants
+        if presence_maison is None:
+            presence_maison_state = "on"
+        else:
+            presence_maison_state = presence_maison.state if presence_maison.state else "on"
+            
+        if presence_piece is None:
+            presence_piece_state = "on"
+        else:
+            presence_piece_state = presence_piece.state if presence_piece.state else "on"
+        
+        if presence_maison_state == "off":
             self._state = "Maison vide"
-        elif presence_piece and presence_piece.state == "off":
+        elif presence_piece_state == "off":
             self._state = "Présence pièce : Absence"
         else:
             self._state = "Présence pièce : Présent"
