@@ -3,7 +3,7 @@
 DOMAIN = "smart_minisplit"
 PLATFORMS = ["climate", "sensor", "switch"]
 DEFAULT_NAME = "Smart Minisplit"
-DEFAULT_HYSTERESIS = 2.0
+DEFAULT_HYSTERESIS = 0.5
 DEFAULT_OFFSET = 1.0
 DEFAULT_CONSIGNES = {
     "absence": {"chauffage": 18.0, "climatisation": 26.0},
