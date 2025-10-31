@@ -281,44 +281,5 @@ action:
         data:
           value: "[[ hysteresis ]]"
 
-input_number:
-  temp_exterieure:
-    name: Température extérieure
-    initial: 15
-    min: -20
-    max: 40
-    step: 0.5
-    unit_of_measurement: "°C"
-  temp_piece:
-    name: Température pièce
-    initial: 20
-    min: 0
-    max: 40
-    step: 0.5
-    unit_of_measurement: "°C"
-  hysteresis_value:
-    name: Hystérésis calculée
-    initial: 2
-    min: 0.5
-    max: 5
-    step: 0.5
-    unit_of_measurement: "°C"
-
-input_select:
-  mode_climate:
-    name: Mode de climatisation
-    options:
-      - "absence"
-      - "eco"
-      - "confort"
-    initial: "confort"
-
-input_text:
-  etat_mini_split:
-    name: Etat mini-split
-    initial: "Système démarré"
-
-switch:
-  mode_manuel:
-    name: Mode Manuel
-    initial: false
+# Les entités input_number, input_select et input_text sont créées automatiquement
+# par l'automatisation lors de son exécution
