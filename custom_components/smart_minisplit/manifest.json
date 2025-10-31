@@ -1,11 +1,12 @@
 {
     "name": "HA Smart Minisplit",
     "domain": "smart_minisplit",
-    "version": "2.0.1",
+    "version": "2.0.2",
     "documentation": "https://github.com/Aschefr/HA-Smart-Minisplit",
     "issue_tracker": "https://github.com/Aschefr/HA-Smart-Minisplit/issues",
     "dependencies": [],
     "codeowners": ["@Aschefr"],
     "iot_class": "local_polling",
-    "requirements": []
+    "requirements": [],
+    "config_flow": true
 }
