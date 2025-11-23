@@ -1,6 +1,6 @@
 blueprint:
   name: Gestion PAC Master (Avec Auto-Présence & Solaire)
-  description: Pilote la PAC en gérant tout : Présence auto, Solaire, Saisons, Delta T et Journal.
+  description: Pilote la PAC
   domain: automation
   input:
     # --- BASES ---
