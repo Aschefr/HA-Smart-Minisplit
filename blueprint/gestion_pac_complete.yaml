@@ -1,0 +1,255 @@
+blueprint:
+  name: Gestion PAC Complète (Journal + Dashboard)
+  description: Gestion type "Générateur" mais en Blueprint. Supporte le mode manuel, le journal d'activité et les consignes dashboard.
+  domain: automation
+  input:
+    # --- ENTITÉS PRINCIPALES ---
+    climate_entity:
+      name: Thermostat (PAC)
+      selector:
+        entity:
+          domain: climate
+    
+    # --- BOOLEANS DE CONTRÔLE ---
+    switch_auto:
+      name: Interrupteur Gestion Auto
+      selector:
+        entity:
+          domain: input_boolean
+    switch_manual:
+      name: Témoin Mode Manuel (Ecrasement)
+      selector:
+        entity:
+          domain: input_boolean
+    switch_presence:
+      name: État Présence
+      selector:
+        entity:
+          domain: [input_boolean, binary_sensor]
+    switch_comfort:
+      name: Mode Confort (ON=Confort, OFF=Eco)
+      selector:
+        entity:
+          domain: input_boolean
+    switch_season:
+      name: Mode Saison (OFF=Hiver, ON=Été)
+      selector:
+        entity:
+          domain: input_boolean
+
+    # --- SENSORS TECHNIQUES ---
+    delta_sensor:
+      name: Capteur Delta T°
+      selector:
+        entity:
+          domain: sensor
+    
+    # --- JOURNAL ---
+    log_entity:
+      name: Journal d'activité (Input Text)
+      selector:
+        entity:
+          domain: input_text
+
+    # --- CONSIGNES HIVER (Input Numbers) ---
+    temp_h_abs:
+      name: Consigne Hiver - Absence
+      selector: { entity: { domain: input_number } }
+    temp_h_eco:
+      name: Consigne Hiver - Eco
+      selector: { entity: { domain: input_number } }
+    temp_h_conf:
+      name: Consigne Hiver - Confort
+      selector: { entity: { domain: input_number } }
+
+    # --- CONSIGNES ETE (Input Numbers) ---
+    temp_e_abs:
+      name: Consigne Été - Absence
+      selector: { entity: { domain: input_number } }
+    temp_e_eco:
+      name: Consigne Été - Eco
+      selector: { entity: { domain: input_number } }
+    temp_e_conf:
+      name: Consigne Été - Confort
+      selector: { entity: { domain: input_number } }
+
+    # --- INPUT NUMBER FEEDBACK (Pour afficher la consigne actuelle sur le dashboard) ---
+    current_setpoint_feedback:
+      name: Retour Consigne Actuelle (Optionnel)
+      description: "L'input number qui affiche la consigne calculée sur le dashboard"
+      default: []
+      selector: { entity: { domain: input_number } }
+
+# Variables pour simplifier les templates
+variables:
+  climate: !input climate_entity
+  s_auto: !input switch_auto
+  s_manual: !input switch_manual
+  s_pres: !input switch_presence
+  s_conf: !input switch_comfort
+  s_season: !input switch_season
+  s_delta: !input delta_sensor
+  log_txt: !input log_entity
+  f_feedback: !input current_setpoint_feedback
+  
+  # Températures Hiver
+  th_abs: !input temp_h_abs
+  th_eco: !input temp_h_eco
+  th_conf: !input temp_h_conf
+  
+  # Températures Été
+  te_abs: !input temp_e_abs
+  te_eco: !input temp_e_eco
+  te_conf: !input temp_e_conf
+
+trigger:
+  - platform: state
+    entity_id: 
+      - !input switch_auto
+      - !input switch_manual
+      - !input switch_presence
+      - !input switch_comfort
+      - !input switch_season
+      - !input temp_h_abs
+      - !input temp_h_eco
+      - !input temp_h_conf
+      - !input temp_e_abs
+      - !input temp_e_eco
+      - !input temp_e_conf
+  - platform: state
+    entity_id: !input delta_sensor
+    for: "00:02:00" # Tampon de 2 min
+  # Détection changement manuel sur le thermostat
+  - platform: state
+    entity_id: !input climate_entity
+    attribute: temperature
+    id: user_action
+  - platform: state
+    entity_id: !input climate_entity
+    to: "off"
+    id: user_action
+  - platform: state
+    entity_id: !input climate_entity
+    to: "heat"
+    id: user_action
+  - platform: state
+    entity_id: !input climate_entity
+    to: "cool"
+    id: user_action
+
+action:
+  # ---------------------------------------------------------
+  # CAS 1 : GESTION AUTOMATIQUE DESACTIVÉE
+  # ---------------------------------------------------------
+  - if:
+      - condition: state
+        entity_id: !input switch_auto
+        state: "off"
+    then:
+      - service: input_text.set_value
+        target: { entity_id: !input log_entity }
+        data:
+          value: "STOP - Gestion Auto désactivée par l'utilisateur."
+      - stop: "Gestion automatique désactivée"
+
+  # ---------------------------------------------------------
+  # CAS 2 : DETECTION ACTION UTILISATEUR (Passage en MANUEL)
+  # ---------------------------------------------------------
+  - if:
+      - condition: trigger
+        id: user_action
+      - condition: template
+        # Vérifie que ce n'est pas l'automatisation elle-même qui a fait le changement
+        value_template: "{{ trigger.to_state.context.id != this.context.id }}"
+      - condition: state
+        entity_id: !input switch_manual
+        state: "off"
+    then:
+      - service: input_boolean.turn_on
+        target: { entity_id: !input switch_manual }
+      - service: input_text.set_value
+        target: { entity_id: !input log_entity }
+        data:
+          value: >
+            MANUEL - Reprise main utilisateur le {{ now().strftime('%d/%m à %H:%M') }} ({{ state_attr(climate, 'temperature') }}°C).
+      - stop: "Passage en mode manuel"
+
+  # ---------------------------------------------------------
+  # CAS 3 : SI MODE MANUEL EST ACTIF, ON NE FAIT RIEN (Sauf si on vient de le désactiver)
+  # ---------------------------------------------------------
+  - if:
+      - condition: state
+        entity_id: !input switch_manual
+        state: "on"
+      # Exception: Si le trigger était de passer le manuel à OFF, on continue pour réappliquer l'auto
+      - condition: template
+        value_template: "{{ trigger.entity_id != s_manual }}" 
+    then:
+      - stop: "Mode manuel actif - Pas d'action auto"
+
+  # ---------------------------------------------------------
+  # CAS 4 : CALCUL DE LA CONSIGNE CIBLE (Logique Coeur)
+  # ---------------------------------------------------------
+  - variables:
+      is_summer: "{{ states(s_season) == 'on' }}"
+      is_present: "{{ states(s_pres) == 'on' }}"
+      is_comfort: "{{ states(s_conf) == 'on' }}"
+      delta_val: "{{ states(s_delta) | float(0) }}"
+      
+      # Détermination Température Cible
+      target_t: >
+        {% if is_summer %}
+          {% if not is_present %} {{ states(te_abs) }}
+          {% elif is_comfort %} {{ states(te_conf) }}
+          {% else %} {{ states(te_eco) }} {% endif %}
+        {% else %}
+          {% if not is_present %} {{ states(th_abs) }}
+          {% elif is_comfort %} {{ states(th_conf) }}
+          {% else %} {{ states(th_eco) }} {% endif %}
+        {% endif %}
+
+      # Détermination Mode CVC (Heat/Cool/Off)
+      target_mode: >
+        {% if delta_val < 3 %}
+          off
+        {% elif is_summer %}
+          cool
+        {% else %}
+          heat
+        {% endif %}
+
+      # Nom du mode pour le journal
+      mode_name: >
+        {% if not is_present %} ABSENCE
+        {% elif is_comfort %} CONFORT
+        {% else %} ECO {% endif %}
+      saison_name: "{{ 'ETE' if is_summer else 'HIVER' }}"
+
+  # ---------------------------------------------------------
+  # CAS 5 : APPLICATION (Seulement si changement nécessaire)
+  # ---------------------------------------------------------
+  - if:
+      - condition: template
+        value_template: >
+          {{ state_attr(climate, 'temperature') | float(0) != target_t | float(0)
+             or states(climate) != target_mode }}
+    then:
+      - service: climate.set_temperature
+        target: { entity_id: !input climate_entity }
+        data:
+          temperature: "{{ target_t }}"
+          hvac_mode: "{{ target_mode }}"
+      
+      # Mise à jour du Input Number "Feedback" si configuré
+      - if: "{{ f_feedback != [] }}"
+        then:
+          - service: input_number.set_value
+            target: { entity_id: !input current_setpoint_feedback }
+            data: { value: "{{ target_t }}" }
+
+      # Ecriture dans le journal
+      - service: input_text.set_value
+        target: { entity_id: !input log_entity }
+        data:
+          value: >
+            AUTO - {{ target_mode | upper }} à {{ target_t }}°C | {{ saison_name }} - {{ mode_name }} (Delta: {{ delta_val }}°C) le {{ now().strftime('%d/%m %H:%M') }}
